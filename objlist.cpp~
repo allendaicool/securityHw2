@@ -34,25 +34,22 @@ int main(int argc, const char * argv[])
 	 * aFlag stands for the opertaion
 	 * lFlag stands for -l option in objlist
 	 */
-	int  uFlag;
-	int  gFlag ;
 	int  aFlag;
 	int  lFlag;
-	string usr ;
-	string group;
+	string usr("") ;
+	string group("");
 	char operation;
 	struct dirent *entry;
 	struct stat st;;
-	
+	getUser_Group(usr,group);
 	/* parse the argument passed in and did some sanity check
 	 * on the user input
 	 */
-	uFlag = 0, gFlag = 0, aFlag = 0,lFlag = 0 ;
-	parseCommand(argc,argv,uFlag,gFlag,aFlag,lFlag,usr
-			      , group,operation);
+	aFlag = 0,lFlag = 0 ;
+	parseCommand(argc,argv,aFlag,lFlag,operation);
 	/* check if some options exists. 
 	For example -u and -g must appear in the user input */
-	if(uFlag != 1 || gFlag== 1 || aFlag == 1 ){
+	if(aFlag == 1 || argc > 2){
 		fprintf(stderr,"invalid argument input");
 		exit(EXIT_FAILURE);
 	}
@@ -69,7 +66,7 @@ int main(int argc, const char * argv[])
 	 * belonged to the user.
 	 */
 	DIR *currentDir;
-	char *currentDirName = (char *)"./";
+	char *currentDirName = (char *)"filesystem/";
 	if ((currentDir = opendir(currentDirName)) == NULL){
 		fprintf(stderr,"opendir() error");
 		exit(EXIT_FAILURE);

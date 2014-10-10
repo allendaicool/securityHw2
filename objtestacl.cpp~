@@ -35,25 +35,23 @@ int main(int argc, const char * argv[])
 	 * aFlag stands for the opertaion
 	 * lFlag stands for -l option in objlist
 	 */
-	int  uFlag;
-	int  gFlag ;
+	
 	int  aFlag;
 	int  lFlag;
-	string usr ;
-	string group;
+	string usr("") ;
+	string group("");
 	char operation;
 	char *val;
 	int containBit;
-
+	getUser_Group(usr,group);
 	/* parse the argument passed in and did some sanity check
 	 * on the user input
 	 */
-	uFlag = 0, gFlag = 0, aFlag = 0,lFlag = 0 ;
-	parseCommand(argc,argv,uFlag,gFlag,aFlag,lFlag,usr
-			      , group,operation);
+	aFlag = 0,lFlag = 0 ;
+	parseCommand(argc,argv,aFlag,lFlag,operation);
  	/* check if some options exists. 
 	For example -u and -g must appear in the user input */
-	if(uFlag != 1 || gFlag!= 1 || aFlag != 1 || lFlag == 1){
+	if(aFlag != 1 || lFlag == 1 || argc > 4){
 		fprintf(stderr,"invalid argument input");
 		exit(EXIT_FAILURE);
 	}
@@ -67,7 +65,7 @@ int main(int argc, const char * argv[])
 	}
 
 
-	string temp("");
+	string temp("filesystem/");
 	containBit = checkIfContainPlus((char *)argv[argc-1]);
 	if (containBit){	
 		temp.append(argv[argc-1]);
@@ -75,11 +73,16 @@ int main(int argc, const char * argv[])
 	}
 	else{
 		temp.append(usr);
+		if(sanityCheck((char *)argv[argc-1]) == 0){
+			fprintf(stderr,"invalid filename argument");
+			exit(EXIT_FAILURE);	
+		}
 		addPathName(temp,(char *)argv[argc-1],1,1,0);
 	}
 	val = NULL;
 
 	/* find the permission list for certain group and user by reading ACL file*/
+	cout<<temp<<endl;
 	findPermission(temp,(char *)usr.c_str(),(char *)group.c_str(),&val);
 	if(val == NULL){
 		printf("permission denied");

@@ -36,59 +36,38 @@ objtestacl : objtestacl.o functionCall.o
 ARG=userfile.txt
 fileds='s d v'
 exec:	build
-	chown god:g2 ./objput
+	#bash  my_script
+	#useradd god
+	
+	chown god ./objput
 	chmod u+s  ./objput
-	chown god:g2 ./objget
+	chown god ./objget
 	chmod u+s  ./objget
-	chown god:g2 ./objlist
+	chown god ./objlist
 	chmod u+s  ./objlist
-	chown god:g2 ./objgetacl
+	chown god ./objgetacl
 	chmod u+s  ./objgetacl
-	chown god:g2 ./objsetacl
+	chown god ./objsetacl
 	chmod u+s  ./objsetacl
-	chown god:g2 ./objtestacl
+	chown god ./objtestacl
 	chmod u+s  ./objtestacl	
-	mkdir filesystem	
-	# cat $(ARG) > user+group
-	#echo ${fileds[0]}
-	#forms=abc
-	#for i in 1 2 3 4;do \
-	#	echo success; \
-	#done
-	#echo $(printf "%s" "$ARG");
-	 #while IFS= read -r line;do \
-	#	echo $(printf "%s" "$line"); \
-	#	fields=($(printf "%s" "$line")); \		
-	#	tlen=${#fields[@]}; \
-	#	echo ${tlen}; \
-	#	echo  "${fields[0]}" ; \
-	#	echo  "${fields[${tlen}-1]}"; \
-	#	
-	#	for ((i=1; i < ${tlen}; i++));do \
-	#			if grep -q -w "${fields[i]}"  /etc/group;then \
-	#			  	echo group  already exists ; \
-	#			else \
-	#		groupadd "${fields[i]}"; \
-	#			fi ; \
-	#	done
-	#
-	#	useradd -g "${fields[1]}" "${fields[0]}"
-	 #	for ((i=2; i < ${tlen}; i++));
-	#		do
-	#			usermod -G "${fields[i]}" "${fields[0]}"
-	#	        done
-	#done < tt
+	#mkdir filesystem
+	#chown god filesystem
+	#chmod 700 filesystem	
 
-test: 	build	exec	
-	./objput -u u1 -g g1 doc < haha
-	./objget -u u1 -g g1 doc
-	./objlist -u u1
-	./objgetacl -u u1 -g g1 doc
-	./objsetacl -u u1 -g g1 doc < newacl
-	./objtestacl -u u1 -g g3 -a r doc
-	./objtestacl -u u1 -g g3 -a x doc
-	./objput -u u1 -g g1 doc < haha
-	./objput -u u2 -g g1 doc < haha
+
+
+test: 	build		
+	su u1 -c "./objput  doc < haha.txt"
+	su u1 -c "./objget  doc"
+	su u1 -c "./objlist"
+	su u1 -c "./objgetacl doc"
+	su u1 -c "./objsetacl  doc < newacl"
+	su u1 -c "./objtestacl  -a r doc"
+	su u1 -c "./objtestacl  -a x doc"
+	su u1 -c "./objput  doc < haha.txt"
+	su u2 -c "./objput  doc < haha2.txt"
+	su u1 -c "./objget  u2+doc"
 clean:
 	rm *.o   objtestacl objgetacl objsetacl objlist objput objget *.core
 

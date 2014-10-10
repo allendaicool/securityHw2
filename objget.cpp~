@@ -17,7 +17,8 @@
 #include <stdio.h>
 #include <getopt.h>
 #include "functionCall.h"
-
+#include <pwd.h>
+#include <grp.h>
 using namespace std;
 
 /* This main function parse the use input and does the sanity check
@@ -30,28 +31,27 @@ int main(int argc, const char * argv[])
 	 * aFlag stands for the opertaion
 	 * lFlag stands for -l option in objlist
 	 */
-	int  uFlag;
-	int  gFlag ;
 	int  aFlag;
 	int  lFlag;
-	string usr ;
-	string group;
 	char operation;
 	int readPermission;
 	char *val;
 	int containBit;
 	FILE *filestream;
+	string usr("") ;
+	string group("");
+	getUser_Group(usr,group);
 
 	/* parse the argument passed in and did some sanity check
 	 * on the user input
 	 */
-	uFlag = 0, gFlag = 0, aFlag = 0,lFlag = 0 ;
-	parseCommand(argc,argv,uFlag,gFlag,aFlag,lFlag,usr
-			      , group,operation);
-	if(uFlag != 1 || gFlag!= 1 || aFlag == 1 || lFlag == 1){
+	aFlag = 0,lFlag = 0 ;
+	parseCommand(argc,argv,aFlag,lFlag,operation);
+	if(aFlag == 1 || lFlag == 1 || argc > 2){
 		fprintf(stderr, "invalid argument input");
 		exit(EXIT_FAILURE);
 	}
+	
 	/* check if user and group combination exists in user+group file*/
 	checkifUserGroup((char *)usr.c_str(), (char *)group.c_str(),0);
 
@@ -62,11 +62,10 @@ int main(int argc, const char * argv[])
 	}
 	/* append string after the username and get a new string
 	 * for example user+doc1 as name for doc file for user*/
-	string fileName("");
-
 	
 	containBit = checkIfContainPlus((char *)argv[argc-1]);
 	
+	string fileName("");
 	if (containBit){
 				
 		fileName.append(argv[argc-1]);
@@ -74,6 +73,11 @@ int main(int argc, const char * argv[])
 	}
 	else{
 		fileName.append(usr);
+		if(sanityCheck((char *)argv[argc-1]) == 0){
+			fprintf(stderr,"invalid filename argument");
+			exit(EXIT_FAILURE);	
+
+		}
 		addPathName(fileName,(char *)argv[argc-1],1,0,0);
 	}
 	
@@ -84,8 +88,11 @@ int main(int argc, const char * argv[])
 		addPathName(fileNameACL,NULL,0,1,0);
 	val = NULL;
 
+	string relativePath("");
+	relativePath.append("filesystem/");
+	relativePath.append(fileNameACL);
 	/* find if we have permission to display the file*/
-	findPermission(fileNameACL, (char *)usr.c_str(),(char *)group.c_str()
+	findPermission(relativePath, (char *)usr.c_str(),(char *)group.c_str()
 		       ,&val);
 	if(val == NULL){
 		printf("permission denied");
@@ -96,7 +103,10 @@ int main(int argc, const char * argv[])
 	free(val);
 	/* if we have permssion, then we display the file content in stdout*/
 	if(readPermission == 1){
-		filestream = fopen(fileName.c_str(),"r");
+		string fileNameRelative("");
+		fileNameRelative.append("filesystem/");
+		fileNameRelative.append(fileName);
+		filestream = fopen(fileNameRelative.c_str(),"r");
 		if(filestream == NULL){
 			printf("no suc file\n");
 			exit(EXIT_FAILURE);

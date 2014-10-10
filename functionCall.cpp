@@ -15,7 +15,8 @@
 #include <getopt.h>
 #include <string.h>
 #include "functionCall.h"
-
+#include <pwd.h>
+#include <grp.h>
 using namespace std;
 
 
@@ -197,6 +198,7 @@ int findPermission(string &filename, char *first, char * second, char **val)
 	infile.open(filename.c_str());
 	
 	if(infile.fail()){
+		cout<<filename<<endl;
 		fprintf(stderr, "file does not exist\n");
 		exit(EXIT_FAILURE);
 	}
@@ -294,6 +296,34 @@ int sanityCheck(char  *str)
 	return 1;
 }
 
+
+
+int getUser_Group(string &user, string &group)
+{
+	char *userName;
+	char *groupName;
+	struct passwd *passTemp;
+	struct group *groupTemp;
+	gid_t gid;
+	uid_t uid;
+	
+	gid = getgid();
+	uid = getuid();
+	passTemp = getpwuid(uid);	
+	groupTemp = getgrgid(gid);
+	userName = passTemp->pw_name;
+	groupName = groupTemp->gr_name;
+	user.append(userName);
+	group.append(groupName);
+	cout<< "debug info" <<endl;
+	cout<<userName<<endl;	
+	cout<<groupName<<endl;
+	cout<<gid<<endl;
+	cout<<uid<<endl;
+	cout<< "debug ending" <<endl;
+	return 1;
+}
+
 /* This function parse the commands passed in by using getopt and
  * set corresponding flag
  *  argc: the number of arguments
@@ -307,19 +337,17 @@ int sanityCheck(char  *str)
  *  operation: option following the -a
  *  return 1;
  */
-int parseCommand(int argc , const char ** command, int &uFlag,
-		 int &gFlag,int &aFlag,
-		 int &lFlag,string &usr , string & group, char &operation)
+int parseCommand(int argc , const char ** command,
+		 int &aFlag,
+		 int &lFlag, char &operation)
 {
 	/* c keeps the return value of getopt
 	 * enter records if the we have entered the getopt loop
 	 * if enter equals to one then loop has been exeucted
 	 * if enter equals to -1 then loop has not been executed
 	 */
-	int sanity;
 	int c;
-	int enter;
-	enter = -1;
+	
 	
 	/* set the corresponding flags
 	 * if there is no option after -u -g or -a
@@ -327,8 +355,8 @@ int parseCommand(int argc , const char ** command, int &uFlag,
 	 * if the option after -a is more than one character,
 	 * then we report an error as well
 	 */
-	while ( (c = getopt(argc,(char * const *)command,"u:g:a:l")) != -1){
-		enter = 1;
+	while ( (c = getopt(argc,(char * const *)command,"a:l")) != -1){
+		
 		switch(c)
 		{
 			case'a':
@@ -347,37 +375,12 @@ int parseCommand(int argc , const char ** command, int &uFlag,
 				}
 
 				break;
-			case 'u':
-				uFlag = 1;
-				sanity = sanityCheck((char *)optarg);
-				if(!sanity){
-					fprintf(stderr,"invalid character in usrname\n");
-					exit(EXIT_FAILURE);
-				}
-				usr.assign(optarg);
-				break;
-			case 'g':
-				gFlag = 1 ;
-				if(strcmp(optarg,command[argc-1])==0){
-					fprintf(stderr,"no group found\n");
-					exit(EXIT_FAILURE);
-				}
-				sanity = sanityCheck((char *)optarg);
-				if(!sanity){
-					fprintf(stderr,"invalid character in groupname\n");
-					exit(EXIT_FAILURE);
-				}
-
-				group.assign(optarg);
-				
-				break;
 			case 'l':
 				lFlag = 1;
 				break;
 				
 			case '?':
 				if(optopt == 'a' ||
-				   optopt == 'u' || optopt == 'g' ||
 				   optopt == 'l')
 					fprintf (stderr,
 					"Option -%c requires an argument.\n"
@@ -395,10 +398,6 @@ int parseCommand(int argc , const char ** command, int &uFlag,
 			default:
 				abort ();
 		}
-	}
-	if(enter == -1){
-		fprintf(stderr,"\nthe wrong input format\n");
-		exit(EXIT_FAILURE);
 	}
 	return 1;
 }

@@ -35,23 +35,20 @@ int main(int argc, const char * argv[])
 	 * lFlag stands for -l option in objlist
 	 */
 	int containBit;
-	int  uFlag;
-	int  gFlag ;
 	int  aFlag;
 	int  lFlag;
-	string usr ;
-	string group;
+	string usr("") ;
+	string group("");
 	char operation;
 	int value ;
 	size_t dum;
 	char * bufferReadIn;
-
-	uFlag = 0, gFlag = 0, aFlag = 0,lFlag = 0 ;
-	parseCommand(argc,argv,uFlag,gFlag,aFlag,lFlag,usr
-			      , group,operation);
+	getUser_Group(usr,group);
+	aFlag = 0,lFlag = 0 ;
+	parseCommand(argc,argv,aFlag,lFlag,operation);
 	/* check if some options exists. 
 	For example -u and -g must appear in the user input */
-	if(uFlag != 1 || gFlag!= 1 || aFlag == 1 || lFlag == 1){
+	if(aFlag == 1 || lFlag == 1 || argc >2){
 		fprintf(stderr,"invalid argument input");
 		exit(EXIT_FAILURE);
 	}
@@ -64,7 +61,7 @@ int main(int argc, const char * argv[])
 	checkifUserGroup((char *)usr.c_str(), (char *)group.c_str(),0);
 
 	
-	string temp("");
+	string temp("filesystem/");
 	containBit = checkIfContainPlus((char *)argv[argc-1]);
 	if (containBit){	
 		temp.append(argv[argc-1]);
@@ -72,6 +69,10 @@ int main(int argc, const char * argv[])
 	}
 	else{
 		temp.append(usr);
+		if(sanityCheck((char *)argv[argc-1]) == 0){
+			fprintf(stderr,"invalid filename argument");
+			exit(EXIT_FAILURE);	
+		}
 		addPathName(temp,(char *)argv[argc-1],1,1,0);
 	}
 	

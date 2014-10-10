@@ -14,7 +14,10 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <getopt.h>
+#include <dirent.h>
 #include "help.h"
+#include <pwd.h>
+#include <grp.h>
 #include "functionCall.h"
 using namespace std;
 
@@ -29,18 +32,18 @@ int main(int argc, const char * argv[])
 	* aFlag stands for the opertaion
 	* lFlag stands for -l option in objlist
 	*/
-	int  uFlag;
-	int  gFlag ;
+	
 	int  aFlag;
 	int  lFlag;
 	/* the usr, operation and group store the user inputs 
 	 * and several file steams are created to open or overwrite
 	 * the file 		
 	 */
-	string usr ;
-	string group;
+	string usr("") ;
+	string group("");
+	
 	char operation;
-	string fileNameACL;
+	string fileNameACL("");
 	char *storeVal;
 	int overWritePermission;
 	FILE *newFile ;
@@ -50,19 +53,21 @@ int main(int argc, const char * argv[])
 	char *bufferReadIn;
 	FILE *aclList;
 	int overWrite;
+	
+	getUser_Group(usr,group);
+	
+
 	/* parse the argument passed in and did some sanity check
 	 * on the user input
 	 */	
-	uFlag = 0, gFlag = 0, aFlag = 0,lFlag = 0, overWrite = 0;
-	parseCommand(argc,argv,uFlag,gFlag,aFlag,lFlag,usr
-		     ,group,operation);
+	aFlag = 0,lFlag = 0, overWrite = 0;
+	parseCommand(argc,argv,aFlag,lFlag,operation);
 	
 	/* check if user and group combination exists in user+group file*/
 	checkifUserGroup((char *)usr.c_str(), (char *)group.c_str(),0);
 	
-	/* check if some options exists. 
-	 *For example -u and -g must appear in the user input */
-	if(uFlag != 1 || gFlag!= 1 || aFlag == 1 || lFlag == 1){
+	/* check if some options exists. */
+	if(aFlag == 1 || lFlag == 1 || argc > 2){
 		fprintf(stderr, "invalid argument input\n");		
 		//perror("invalid argument input");
 		exit(EXIT_FAILURE);
@@ -72,18 +77,37 @@ int main(int argc, const char * argv[])
 		fprintf(stderr,"There is no shell redirect.  stopped\n");		
 		exit(EXIT_FAILURE);
 	}
+		
+	if(sanityCheck((char *)argv[argc-1]) == 0){
+		fprintf(stderr,"invalid filename argument");
+		exit(EXIT_FAILURE);	
+	}
 
 	/* append string after the username and get a new string
 	 * for example user+doc1 as name for doc file for user*/
 	string fileName(usr);
 	addPathName(fileName,(char *)argv[argc-1],1,0,0);
 	
-	
+	/* open the current directory to iterate all the files
+	 * contained in that folder and search for the file 
+	 * belonged to the user.
+	 */
+	/*DIR *currentDir;
+	char *currentDirName = (char *)"filesystem";
+	if ((currentDir = opendir(currentDirName)) == NULL){
+		fprintf(stderr,"opendir() error");
+		exit(EXIT_FAILURE);
+	}*/
+
 	storeVal = NULL;
-	filestream = fopen(fileName.c_str(),"r");
+	string relativePath("");
+	relativePath.append("filesystem/");
+	relativePath.append(fileName);
+	filestream = fopen(relativePath.c_str(),"r");
 	if(filestream != NULL){
 		overWrite = 1;
-		fileNameACL.assign(fileName);
+		fileNameACL.append("filesystem/");
+		fileNameACL.append(fileName);
 		addPathName(fileNameACL,NULL,0,1,0);
 		
 		/*find if we have permission to overwrite the existing file
@@ -106,7 +130,7 @@ int main(int argc, const char * argv[])
 		}
 	}
 	
-	newFile = fopen(fileName.c_str(),"w+");
+	newFile = fopen(relativePath.c_str(),"w+");
 	
 	if(newFile == NULL)
 		exit(EXIT_FAILURE);
@@ -123,7 +147,8 @@ int main(int argc, const char * argv[])
 	/* creates a new aclFile for the created file
 	 */
 	if(overWrite == 0){
-		string aclListName(fileName);
+		string aclListName("filesystem/");
+		aclListName.append(fileName);
 		addPathName(aclListName,NULL,0,1,0);	
 		aclList = fopen(aclListName.c_str(),"w+");
 		if(aclList == NULL)
@@ -133,6 +158,7 @@ int main(int argc, const char * argv[])
 		fputs("rwxpv", aclList);
 		fclose(aclList);
 	}
+	cout <<"successful"<<endl;
 	/*
 	printf ("uflag = %d,aflag = %d, gflag = %d, lvalue = %d\n",
 		uFlag,aFlag, gFlag, lFlag);

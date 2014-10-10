@@ -10,8 +10,10 @@
 #define ____functionCall__
 #include<string>
 using namespace std;
-int parseCommand(int , const char ** , int & , int &,int &,int &,
-		 string &, string &, char &);
+int getUser_Group(string &, string &);
+int parseCommand(int, const char ** ,
+		 int &,
+		 int &, char &);
 int findPermission(string & ,char *,char  *, char **);
 int checkPermission(char, char *);
 int addPathName(string &, char *, int , int, int);
