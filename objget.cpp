@@ -19,6 +19,7 @@
 #include "functionCall.h"
 #include <pwd.h>
 #include <grp.h>
+#include <vector>
 using namespace std;
 
 /* This main function parse the use input and does the sanity check
@@ -39,8 +40,9 @@ int main(int argc, const char * argv[])
 	int containBit;
 	FILE *filestream;
 	string usr("") ;
-	string group("");
+	vector<string> group;
 	getUser_Group(usr,group);
+	int userGroup = 0;
 
 	/* parse the argument passed in and did some sanity check
 	 * on the user input
@@ -53,7 +55,16 @@ int main(int argc, const char * argv[])
 	}
 	
 	/* check if user and group combination exists in user+group file*/
-	checkifUserGroup((char *)usr.c_str(), (char *)group.c_str(),0);
+	for(int i = 0 ; i < (int)group.size(); i++){	
+		if(checkifUserGroup((char *)usr.c_str(), (char *)(group.at(i).c_str()),0) == 1){
+			userGroup = 1;
+			break;
+		}
+	}
+	if(!userGroup){
+		fprintf(stderr, "There is no such usr and group combination");
+		exit(EXIT_FAILURE);
+	}
 
 	/* we do not allow shell redirect in the objget*/
 	if(!checkShellRedirect()){
@@ -92,7 +103,7 @@ int main(int argc, const char * argv[])
 	relativePath.append("filesystem/");
 	relativePath.append(fileNameACL);
 	/* find if we have permission to display the file*/
-	findPermission(relativePath, (char *)usr.c_str(),(char *)group.c_str()
+	findPermission(relativePath, (char *)usr.c_str(),group
 		       ,&val);
 	if(val == NULL){
 		printf("permission denied");

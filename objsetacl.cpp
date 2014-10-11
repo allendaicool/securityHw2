@@ -22,6 +22,7 @@
 #include <sys/dir.h>
 #include <sys/stat.h>
 #include "functionCall.h"
+#include <vector>
 using namespace std;
 
 /* This main function sets the acl file
@@ -38,12 +39,13 @@ int main(int argc, const char * argv[])
 	int  aFlag;
 	int  lFlag;
 	string usr("") ;
-	string group("");
+	vector<string> group;
 	char operation;
 	int value ;
 	size_t dum;
 	char * bufferReadIn;
 	getUser_Group(usr,group);
+	int userGroup = 0;
 	aFlag = 0,lFlag = 0 ;
 	parseCommand(argc,argv,aFlag,lFlag,operation);
 	/* check if some options exists. 
@@ -58,7 +60,16 @@ int main(int argc, const char * argv[])
 		exit(EXIT_FAILURE);
 	}
 	/* check if user and group combination exists in user+group file*/
-	checkifUserGroup((char *)usr.c_str(), (char *)group.c_str(),0);
+	for(int i = 0 ; i < (int)group.size(); i++){	
+		if(checkifUserGroup((char *)usr.c_str(), (char *)(group.at(i).c_str()),0) == 1){
+			userGroup = 1;
+			break;
+		}
+	}
+	if(!userGroup){
+		fprintf(stderr, "There is no such usr and group combination");
+		exit(EXIT_FAILURE);
+	}
 
 	
 	string temp("filesystem/");
@@ -78,7 +89,7 @@ int main(int argc, const char * argv[])
 	
 	char *val = NULL;
 	/* find the permission list for certain group and user by reading ACL file*/
-	findPermission(temp,(char *)usr.c_str(),(char *)group.c_str(),&val);
+	findPermission(temp,(char *)usr.c_str(),group,&val);
 	if(val == NULL){
 		printf("permission denied");
 		exit(EXIT_FAILURE);

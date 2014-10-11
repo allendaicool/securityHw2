@@ -17,6 +17,7 @@
 #include "functionCall.h"
 #include <pwd.h>
 #include <grp.h>
+#include <vector>
 using namespace std;
 
 
@@ -92,9 +93,8 @@ int checkifUserGroup (char *user, char *group, int listFlag)
 	if(bufferReadin)
 		free(bufferReadin);
 	fclose(newFile);
-	fprintf(stderr, "There is no such usr and group combination");
-	exit(EXIT_FAILURE);
-	return -1;
+	
+	return 0;
 }
 
 
@@ -188,7 +188,7 @@ int checkPermission(char c, char *val)
  *  val: val written to be the permission list and returned back
  *  return : 0;
  */
-int findPermission(string &filename, char *first, char * second, char **val)
+int findPermission(string &filename, char *first, vector<string>& second, char **val)
 {
 	/* open the file and find the corresponding permission
 	 * list for certain users and group
@@ -244,7 +244,6 @@ int findPermission(string &filename, char *first, char * second, char **val)
 			strcpy(*val,token2);
 			return 1;
 		}
-		
 	}
 	infile.close();
 	return 0;
@@ -260,14 +259,17 @@ int findPermission(string &filename, char *first, char * second, char **val)
  *  return : 1 if such combination is found;
  *	     0 if no such combination is found;
  */
-int checkMatch ( char * first , char *second, char *std1, char *std2)
+int checkMatch ( char * first , vector<string> &second, char *std1, char *std2)
 {
-	if(strcmp(std1,first) == 0 || strcmp(std1,"*") == 0){
-		if(strcmp(std2,"*")==0 || strcmp(std2, second) == 0)
-			return 1;
-		else
-			return 0 ;
+	if(strcmp(std1,first) == 0|| strcmp(std1,"*") == 0){
+		if(strcmp(std2,"*")==0)
+			return 1;	
+		for (int i = 0 ; i < (int)second.size();i++){
+			if (strcmp(second.at(i).c_str(),std2) == 0)
+				return 1;
+		}
 	}
+		
 	return  0;
 }
 
@@ -298,27 +300,34 @@ int sanityCheck(char  *str)
 
 
 
-int getUser_Group(string &user, string &group)
+int getUser_Group(string &user, vector<string> &groups)
 {
 	char *userName;
-	char *groupName;
 	struct passwd *passTemp;
 	struct group *groupTemp;
-	gid_t gid;
+	int loop;
+	gid_t *gid;
 	uid_t uid;
 	
-	gid = getgid();
 	uid = getuid();
 	passTemp = getpwuid(uid);	
-	groupTemp = getgrgid(gid);
+
 	userName = passTemp->pw_name;
-	groupName = groupTemp->gr_name;
+	int count_gourp = getgroups(0,NULL);
+	gid = (gid_t *)malloc(count_gourp * sizeof(gid_t));
+	getgroups(count_gourp,gid);
+	for (loop = 0; loop < count_gourp; loop++){
+		groupTemp = getgrgid(gid[loop]);
+		string tempName(groupTemp->gr_name);
+		groups.push_back(tempName);
+	}
+
 	user.append(userName);
-	group.append(groupName);
+
 	cout<< "debug info" <<endl;
 	cout<<userName<<endl;	
-	cout<<groupName<<endl;
-	cout<<gid<<endl;
+
+
 	cout<<uid<<endl;
 	cout<< "debug ending" <<endl;
 	return 1;

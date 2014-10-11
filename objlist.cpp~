@@ -21,7 +21,7 @@
 #include <sys/dir.h>
 #include <sys/stat.h>
 #include "functionCall.h"
-
+#include <vector>
 using namespace std;
 
 /* This main function lists all the file possessed by
@@ -37,11 +37,12 @@ int main(int argc, const char * argv[])
 	int  aFlag;
 	int  lFlag;
 	string usr("") ;
-	string group("");
+	vector<string> group;
 	char operation;
 	struct dirent *entry;
 	struct stat st;;
 	getUser_Group(usr,group);
+	int userGroup = 0;
 	/* parse the argument passed in and did some sanity check
 	 * on the user input
 	 */
@@ -55,7 +56,16 @@ int main(int argc, const char * argv[])
 	}
 
 	/* check if user and group combination exists in user+group file*/
-	checkifUserGroup((char *)usr.c_str(), (char *)group.c_str(),1);	
+	for(int i = 0 ; i < (int)group.size(); i++){	
+		if(checkifUserGroup((char *)usr.c_str(), (char *)(group.at(i).c_str()),0) == 1){
+			userGroup = 1;
+			break;
+		}
+	}
+	if(!userGroup){
+		fprintf(stderr, "There is no such usr and group combination");
+		exit(EXIT_FAILURE);
+	}
 	/* we do not allow shell redirect in the objget*/
 	if(!checkShellRedirect()){
 		fprintf(stderr,"don't allow shell redirect\n");		

@@ -19,6 +19,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include "functionCall.h"
+#include <vector>
 using namespace std;
 
 /* This main function parse the use input and does the sanity check
@@ -41,7 +42,7 @@ int main(int argc, const char * argv[])
 	 * the file 		
 	 */
 	string usr("") ;
-	string group("");
+	vector<string> group;
 	
 	char operation;
 	string fileNameACL("");
@@ -56,7 +57,7 @@ int main(int argc, const char * argv[])
 	int overWrite;
 	string fileName("");
 	getUser_Group(usr,group);
-	
+	int userGroup = 0;
 
 	/* parse the argument passed in and did some sanity check
 	 * on the user input
@@ -65,8 +66,16 @@ int main(int argc, const char * argv[])
 	parseCommand(argc,argv,aFlag,lFlag,operation);
 	
 	/* check if user and group combination exists in user+group file*/
-	checkifUserGroup((char *)usr.c_str(), (char *)group.c_str(),0);
-	
+	for(int i = 0 ; i < (int)group.size(); i++){	
+		if(checkifUserGroup((char *)usr.c_str(), (char *)(group.at(i).c_str()),0) == 1){
+			userGroup = 1;
+			break;
+		}
+	}
+	if(!userGroup){
+		fprintf(stderr, "There is no such usr and group combination");
+		exit(EXIT_FAILURE);
+	}
 
 	/* check if some options exists. */
 	if(aFlag == 1 || lFlag == 1 || argc > 2){
@@ -109,11 +118,13 @@ int main(int argc, const char * argv[])
 		
 		/*find if we have permission to overwrite the existing file
   		 * allowed when there is p character among the action list*/
+
+
+		
 		findPermission(fileNameACL, (char *)usr.c_str(),
-			       (char *)group.c_str(),&storeVal);
+			       group,&storeVal);
 		if(storeVal == NULL){
 			fprintf(stderr, "no usr group combo in the ACL\n");		
-			fprintf(stderr, "someone modified the ACL file\n");
 			exit(EXIT_FAILURE);
 		}	
 		/* check if permssion is contained among the permission list
