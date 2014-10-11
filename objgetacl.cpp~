@@ -97,7 +97,23 @@ int main(int argc, const char * argv[])
 		fprintf(stderr,"do not have permission");
 		exit(EXIT_FAILURE);
 	}
-	printf("\n %s\n ", val);
+	FILE *openACL;
+	
+	openACL = fopen(temp.c_str(),"r");
+	if(openACL == NULL){
+		printf("no suc file\n");
+		exit(EXIT_FAILURE);
+	}
+	char *buffer = NULL;;
+	size_t dum;
+	int revalue;
+	puts("\n");
+	while((revalue = (int)getline(&buffer,&dum,openACL))!= -1)
+			puts(buffer);
+	if(buffer)
+		free(buffer);
+	fclose(filestream);
+	
 	free(val);
 	return 0;
 		

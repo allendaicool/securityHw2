@@ -68,7 +68,8 @@ test: 	build
 	su u1 -c "./objput  doc < haha.txt"
 	su u2 -c "./objput  doc < haha2.txt"
 	su u1 -c "./objget  u2+doc"
+	su u1 -c "./objgetacl u2+doc"
 clean:
-	rm *.o   objtestacl objgetacl objsetacl objlist objput objget *.core
-	su god -c "rm filesystem/*"
+	rm *.o   objtestacl objgetacl objsetacl objlist objput objget
+	
 	

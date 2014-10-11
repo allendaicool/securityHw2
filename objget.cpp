@@ -105,7 +105,11 @@ int main(int argc, const char * argv[])
 	if(readPermission == 1){
 		string fileNameRelative("");
 		fileNameRelative.append("filesystem/");
-		fileNameRelative.append(fileName);
+		if (containBit)
+			fileNameRelative.append(argv[argc-1]);	
+		else
+			fileNameRelative.append(fileName);
+
 		filestream = fopen(fileNameRelative.c_str(),"r");
 		if(filestream == NULL){
 			printf("no suc file\n");

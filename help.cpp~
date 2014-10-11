@@ -35,6 +35,7 @@ int main(int argc, const char * argv[])
 	
 	int  aFlag;
 	int  lFlag;
+	int containBit;
 	/* the usr, operation and group store the user inputs 
 	 * and several file steams are created to open or overwrite
 	 * the file 		
@@ -53,7 +54,7 @@ int main(int argc, const char * argv[])
 	char *bufferReadIn;
 	FILE *aclList;
 	int overWrite;
-	
+	string fileName("");
 	getUser_Group(usr,group);
 	
 
@@ -66,6 +67,7 @@ int main(int argc, const char * argv[])
 	/* check if user and group combination exists in user+group file*/
 	checkifUserGroup((char *)usr.c_str(), (char *)group.c_str(),0);
 	
+
 	/* check if some options exists. */
 	if(aFlag == 1 || lFlag == 1 || argc > 2){
 		fprintf(stderr, "invalid argument input\n");		
@@ -77,37 +79,32 @@ int main(int argc, const char * argv[])
 		fprintf(stderr,"There is no shell redirect.  stopped\n");		
 		exit(EXIT_FAILURE);
 	}
-		
-	if(sanityCheck((char *)argv[argc-1]) == 0){
-		fprintf(stderr,"invalid filename argument");
-		exit(EXIT_FAILURE);	
-	}
-
-	/* append string after the username and get a new string
-	 * for example user+doc1 as name for doc file for user*/
-	string fileName(usr);
-	addPathName(fileName,(char *)argv[argc-1],1,0,0);
 	
-	/* open the current directory to iterate all the files
-	 * contained in that folder and search for the file 
-	 * belonged to the user.
-	 */
-	/*DIR *currentDir;
-	char *currentDirName = (char *)"filesystem";
-	if ((currentDir = opendir(currentDirName)) == NULL){
-		fprintf(stderr,"opendir() error");
-		exit(EXIT_FAILURE);
-	}*/
+	containBit = checkIfContainPlus((char *)argv[argc-1]);	
+	if(containBit){
+		fileName.append(argv[argc-1]);
+	} else{
+		if (sanityCheck((char *)argv[argc-1]) == 0){
+			fprintf(stderr,"invalid filename argument");
+			exit(EXIT_FAILURE);	
+		}
+		fileName.append(usr);
+		addPathName(fileName,(char *)argv[argc-1],1,0,0);
+	}
+		
+	
 
 	storeVal = NULL;
 	string relativePath("");
 	relativePath.append("filesystem/");
 	relativePath.append(fileName);
+	
 	filestream = fopen(relativePath.c_str(),"r");
 	if(filestream != NULL){
 		overWrite = 1;
 		fileNameACL.append("filesystem/");
 		fileNameACL.append(fileName);
+		
 		addPathName(fileNameACL,NULL,0,1,0);
 		
 		/*find if we have permission to overwrite the existing file
@@ -146,7 +143,12 @@ int main(int argc, const char * argv[])
 	fclose(newFile);
 	/* creates a new aclFile for the created file
 	 */
+	
 	if(overWrite == 0){
+		if (containBit){
+			fprintf(stderr, "wrong filename input\n");
+			exit(EXIT_FAILURE);
+		}
 		string aclListName("filesystem/");
 		aclListName.append(fileName);
 		addPathName(aclListName,NULL,0,1,0);	

@@ -105,6 +105,10 @@ int main(int argc, const char * argv[])
 	if(readPermission == 1){
 		string fileNameRelative("");
 		fileNameRelative.append("filesystem/");
+		if (containBit)
+			fileNameRelative.append(argv[argc-1]);	
+		else
+			fileNameRelative.append(fileName);
 		fileNameRelative.append(fileName);
 		filestream = fopen(fileNameRelative.c_str(),"r");
 		if(filestream == NULL){

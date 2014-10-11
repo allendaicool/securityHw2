@@ -69,6 +69,6 @@ test: 	build
 	su u2 -c "./objput  doc < haha2.txt"
 	su u1 -c "./objget  u2+doc"
 clean:
-	rm *.o   objtestacl objgetacl objsetacl objlist objput objget *.core
-
+	rm *.o   objtestacl objgetacl objsetacl objlist objput objget
+	
 	
